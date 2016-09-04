@@ -13,7 +13,6 @@ RUN yum clean all && \
     yum install -y --setopt=tsflags=nodocs install $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS && \
     yum clean all && \
-    useradd -u 1001 -r -m -d ${HOME} -s /sbin/nologin -c "Jenkins Agent" jenkins-agent && \
     mkdir -p /opt/jenkins-agent/bin /var/lib/jenkins && \
     chown -R 1001:0 /var/lib/jenkins && \
     curl -fsSL http://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz | tar xzf - -C /usr/share \
@@ -21,12 +20,13 @@ RUN yum clean all && \
       && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
 
 # Copy script
-COPY config/jenkins-agent.sh config/settings.xml config/passwd.template /opt/jenkins-agent/
+COPY config/jenkins-agent.sh config/settings.xml /opt/jenkins-agent/
 
 # Download JNLP Client, move configurations/scripts and modify permissions
 RUN mv /opt/jenkins-agent/jenkins-agent.sh /opt/jenkins-agent/bin && \
   mv /opt/jenkins-agent/settings.xml /usr/share/maven/conf/settings.xml && \
   chown -R 1001:0 /opt/jenkins-agent /opt/jenkins-agent/bin && \
+  chmod -R g+rw /opt/jenkins-agent && \
   echo "registry = http://\${NEXUS_SERVICE_HOST}:\${NEXUS_SERVICE_PORT}/content/groups/npm-all/" > /opt/jenkins-agent/.npmrc
 
 WORKDIR /var/lib/jenkins
